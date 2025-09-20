@@ -142,7 +142,6 @@ export default function Dashboard() {
 
     return () => clearInterval(interval)
   }, [])
-  
   const chartData = [
     { month: "Jan", revenue: 40000, customers: 15000 },
     { month: "Feb", revenue: 42000, customers: 16500 },
@@ -262,7 +261,7 @@ export default function Dashboard() {
               
               {/* 4 Card Status */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative z-20">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center space-x-2">
                       <CardTitle className="text-sm font-medium text-white">Total Customers</CardTitle>
@@ -299,7 +298,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative z-20">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center space-x-2">
                       <CardTitle className="text-sm font-medium text-white">Active Tasks</CardTitle>
@@ -336,7 +335,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative z-20">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center space-x-2">
                       <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
@@ -373,7 +372,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative z-20">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center space-x-2">
                       <CardTitle className="text-sm font-medium text-white">Conversion Rate</CardTitle>
@@ -401,7 +400,7 @@ export default function Dashboard() {
                         </ResponsiveContainer>
                       </div>
                       <div className="flex-1">
-                        <div className="text-2xl font-bold text-white">{liveData.conversionRate}%</div>
+                        <div className="text-2xl font-bold text-white">{liveData.conversionRate.toFixed(1)}%</div>
                         <p className="text-xs text-green-300">
                           +0.5% from last month
                         </p>
@@ -410,39 +409,59 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               </div>
+              </div>
               
               {/* Area Chart */}
-              <Card className="border-0 shadow-lg relative z-30">
+              <Card className="border-0 shadow-lg">
                 <div className="space-y-4 p-6">
                   <div>
                     <h3 className="text-2xl font-bold tracking-tight text-white">Revenue Overview</h3>
-                    <p className="text-muted-foreground">Monthly revenue and customer growth for the current year</p>
+                    <p className="text-muted-foreground">
+                      Monthly revenue and customer growth for the current year
+                    </p>
                   </div>
-                  <div className="h-[300px] relative z-40">
-                    <ChartContainer config={chartConfig} className="relative z-50">
-                      <AreaChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
-                        <XAxis 
-                          dataKey="month" 
-                          tickLine={false} 
-                          axisLine={false} 
+                  <div className="h-[300px]">
+                    <ChartContainer config={chartConfig}>
+                      <AreaChart
+                        accessibilityLayer
+                        data={chartData}
+                        margin={{
+                          left: 12,
+                          right: 12,
+                          top: 12,
+                          bottom: 12,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis
+                          dataKey="month"
+                          tickLine={false}
+                          axisLine={false}
                           tickMargin={8}
                           tick={{ fill: '#9CA3AF' }}
                         />
-                        <YAxis 
-                          tickLine={false} 
-                          axisLine={false} 
+                        <YAxis
+                          tickLine={false}
+                          axisLine={false}
                           tickMargin={8}
                           tick={{ fill: '#9CA3AF' }}
                         />
-                        <ChartTooltip 
-                          cursor={false} 
-                          content={<ChartTooltipContent />} 
+                        <ChartTooltip
+                          cursor={false}
+                          content={<ChartTooltipContent indicator="line" />}
                         />
                         <defs>
                           <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                            <stop
+                              offset="5%"
+                              stopColor="var(--color-revenue)"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="var(--color-revenue)"
+                              stopOpacity={0.1}
+                            />
                           </linearGradient>
                         </defs>
                         <Area
@@ -450,8 +469,10 @@ export default function Dashboard() {
                           type="monotone"
                           fill="url(#fillRevenue)"
                           fillOpacity={0.4}
-                          stroke="#3b82f6"
-                          strokeWidth={2}
+                          stroke="var(--color-revenue)"
+                          strokeWidth={3}
+                          dot={{ fill: 'var(--color-revenue)', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: 'var(--color-revenue)', strokeWidth: 2 }}
                         />
                       </AreaChart>
                     </ChartContainer>
@@ -460,11 +481,18 @@ export default function Dashboard() {
               </Card>
               
               {/* Tasks Table */}
-              <Card className="border-0 shadow-lg relative z-20">
-                <CardHeader>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold tracking-tight text-white">Recent Tasks</h3>
-                    <p className="text-muted-foreground">Latest tasks and their current status</p>
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-white">Recent Tasks</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        Your latest task updates and activities
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/10">
+                      View All Tasks
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">

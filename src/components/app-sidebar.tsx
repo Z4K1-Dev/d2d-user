@@ -26,19 +26,19 @@ export function AppSidebar() {
       icon: Home,
     },
     {
+      title: "Analytics",
+      url: "#",
+      icon: BarChart3,
+    },
+    {
       title: "Customers",
-      url: "/customers",
+      url: "#",
       icon: Users,
     },
     {
       title: "Tasks",
-      url: "/tasks",
+      url: "#",
       icon: ClipboardList,
-    },
-    {
-      title: "Analytics",
-      url: "/analytics",
-      icon: BarChart3,
     },
   ]
 
@@ -80,35 +80,32 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+      </SidebarContent>
+      
+      <SidebarFooter>
         <SidebarGroup>
           <SidebarGroupLabel>Settings</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/settings"}>
-                  <a href="/settings">
+                  <a href="#">
                     <SettingsIcon className="h-4 w-4" />
                     <span>Settings</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/profile"}>
+                  <a href="#">
+                    <User className="h-4 w-4" />
+                    <span>Profile</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      </SidebarContent>
-      
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/profile"}>
-              <a href="/profile">
-                <User className="h-4 w-4" />
-                <span>Profile</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   )
