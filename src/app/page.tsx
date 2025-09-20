@@ -4,7 +4,7 @@ import * as React from "react"
 import { TrendingUp, TrendingDown, DollarSign, Activity, CheckCircle, Clock, AlertCircle, MoreHorizontal } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid, defs, linearGradient, stop, PieChart, Pie, Cell, ResponsiveContainer, Sector } from "recharts"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
@@ -17,8 +17,131 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import SpotlightCard from "@/components/ui/spotlightcard"
+
+// Custom active shape for pie chart
+const CustomActiveShape = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props
+  
+  const RADIAN = Math.PI / 180;
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  const sx = cx + (outerRadius + 10) * cos;
+  const sy = cy + (outerRadius + 10) * sin;
+  const mx = cx + (outerRadius + 30) * cos;
+  const my = cy + (outerRadius + 30) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
+        {payload.name}
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`PV ${value}`}</text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
+        {`(Rate ${((percent || 1) * 100).toFixed(2)}%)`}
+      </text>
+    </g>
+  );
+}
 
 export default function Dashboard() {
+  // Live data state
+  const [liveData, setLiveData] = React.useState({
+    totalCustomers: 1234,
+    activeTasks: 56,
+    revenue: 45678,
+    conversionRate: 3.2
+  })
+
+  // Pie chart data for each card
+  const getCustomersPieData = () => {
+    const current = liveData.totalCustomers
+    const previous = Math.floor(current * 0.89) // Previous month (12% less)
+    const growth = current - previous
+    const other = Math.floor(current * 0.3) // Other segment
+    return [
+      { name: 'Current', value: current },
+      { name: 'Previous', value: previous },
+      { name: 'Growth', value: growth },
+      { name: 'Other', value: other }
+    ]
+  }
+
+  const getTasksPieData = () => {
+    const current = liveData.activeTasks
+    const previous = Math.floor(current * 1.05) // Previous week (5% more)
+    const completed = Math.floor(current * 0.6)
+    const pending = current - completed
+    return [
+      { name: 'Current', value: current },
+      { name: 'Previous', value: previous },
+      { name: 'Completed', value: completed },
+      { name: 'Pending', value: pending }
+    ]
+  }
+
+  const getRevenuePieData = () => {
+    const current = liveData.revenue
+    const previous = Math.floor(current * 0.77) // Previous month (23% less)
+    const growth = current - previous
+    const target = Math.floor(current * 1.2)
+    return [
+      { name: 'Current', value: current },
+      { name: 'Previous', value: previous },
+      { name: 'Growth', value: growth },
+      { name: 'Target', value: target }
+    ]
+  }
+
+  const getConversionPieData = () => {
+    const current = liveData.conversionRate * 100 // Convert to number for display
+    const previous = (current - 0.5) * 100 // Previous month (0.5% less)
+    const industry = 2.5 * 100 // Industry average
+    const goal = 4.0 * 100 // Goal
+    return [
+      { name: 'Current', value: current },
+      { name: 'Previous', value: previous },
+      { name: 'Industry', value: industry },
+      { name: 'Goal', value: goal }
+    ]
+  }
+
+  // Simulate live data updates
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveData(prev => ({
+        totalCustomers: prev.totalCustomers + Math.floor(Math.random() * 5) - 2,
+        activeTasks: Math.max(0, prev.activeTasks + Math.floor(Math.random() * 3) - 1),
+        revenue: Math.max(0, prev.revenue + Math.floor(Math.random() * 200) - 100),
+        conversionRate: Math.max(0, Math.min(100, prev.conversionRate + (Math.random() * 0.2 - 0.1)))
+      }))
+    }, 3000) // Update every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [])
   const chartData = [
     { month: "Jan", revenue: 40000, customers: 1200 },
     { month: "Feb", revenue: 42000, customers: 1250 },
@@ -37,11 +160,11 @@ export default function Dashboard() {
   const chartConfig = {
     revenue: {
       label: "Revenue",
-      color: "hsl(var(--chart-1))",
+      color: "#3b82f6", // Blue color
     },
     customers: {
       label: "Customers",
-      color: "hsl(var(--chart-2))",
+      color: "#60a5fa", // Light blue color
     },
   }
 
@@ -140,68 +263,174 @@ export default function Dashboard() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">LIVE</Badge>
+                    </div>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">1,234</div>
-                    <p className="text-xs text-muted-foreground">
-                      +12% from last month
-                    </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="h-32 w-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={getCustomersPieData()}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={25}
+                              outerRadius={40}
+                              dataKey="value"
+                              activeIndex={0}
+                              activeShape={CustomActiveShape}
+                              fill="#3b82f6"
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold">{liveData.totalCustomers.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">
+                          +12% from last month
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">LIVE</Badge>
+                    </div>
                     <Activity className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">56</div>
-                    <p className="text-xs text-muted-foreground">
-                      -5% from last week
-                    </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="h-32 w-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={getTasksPieData()}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={25}
+                              outerRadius={40}
+                              dataKey="value"
+                              activeIndex={0}
+                              activeShape={CustomActiveShape}
+                              fill="#10b981"
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold">{liveData.activeTasks}</div>
+                        <p className="text-xs text-muted-foreground">
+                          -5% from last week
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">LIVE</Badge>
+                    </div>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$45,678</div>
-                    <p className="text-xs text-muted-foreground">
-                      +23% from last month
-                    </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="h-32 w-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={getRevenuePieData()}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={25}
+                              outerRadius={40}
+                              dataKey="value"
+                              activeIndex={0}
+                              activeShape={CustomActiveShape}
+                              fill="#f59e0b"
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold">${liveData.revenue.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">
+                          +23% from last month
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">LIVE</Badge>
+                    </div>
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">3.2%</div>
-                    <p className="text-xs text-muted-foreground">
-                      +0.5% from last month
-                    </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="h-32 w-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={getConversionPieData()}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={25}
+                              outerRadius={40}
+                              dataKey="value"
+                              activeIndex={0}
+                              activeShape={CustomActiveShape}
+                              fill="#8b5cf6"
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold">{liveData.conversionRate.toFixed(1)}%</div>
+                        <p className="text-xs text-muted-foreground">
+                          +0.5% from last month
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
               
-              {/* Line Chart */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Overview</CardTitle>
-                  <CardDescription>
-                    Monthly revenue and customer growth for the current year
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+              {/* Area Chart */}
+              <SpotlightCard>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-2xl font-bold tracking-tight">Revenue Overview</h3>
+                    <p className="text-muted-foreground">
+                      Monthly revenue and customer growth for the current year
+                    </p>
+                  </div>
                   <ChartContainer config={chartConfig} className="h-80 w-full">
-                    <LineChart data={chartData}>
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="customersGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="month" 
@@ -218,24 +447,26 @@ export default function Dashboard() {
                         cursor={false}
                         content={<ChartTooltipContent />}
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="revenue"
-                        stroke="var(--color-revenue)"
+                        stroke="#3b82f6"
                         strokeWidth={2}
+                        fill="url(#revenueGradient)"
                         dot={{ r: 4 }}
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="customers"
-                        stroke="var(--color-customers)"
+                        stroke="#60a5fa"
                         strokeWidth={2}
+                        fill="url(#customersGradient)"
                         dot={{ r: 4 }}
                       />
-                    </LineChart>
+                    </AreaChart>
                   </ChartContainer>
-                </CardContent>
-              </Card>
+                </div>
+              </SpotlightCard>
               
               {/* Task Table */}
               <Card>

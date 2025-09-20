@@ -10,7 +10,12 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "kill:dev": "ps aux | grep -E \"(tsx|next|nodemon)\" | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true",
+    "restart:dev": "npm run kill:dev && sleep 2 && npm run dev",
+    "kill:all": "ps aux | grep -E \"(node|tsx|next|nodemon)\" | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true",
+    "ps:check": "ps aux | grep -E \"(node|tsx|next|nodemon)\" | grep -v grep",
+    "force:restart": "npm run kill:all && sleep 3 && npm run dev"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
